@@ -1,5 +1,9 @@
 # BoilerPlate Repository for developing audio plugins with JUCE & CMake & Visual Studio Code
 
+Boiler plate from [here](https://github.com/tomoyanonymous/juce_cmake_vscode_example) with some additional personal stuff (save state, logo, etc.)
+
+copy of the original readme :
+
 ## Requirements
 
 - JUCE >= 6.0.0 (supports CMake after v6.)
