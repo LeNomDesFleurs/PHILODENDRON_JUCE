@@ -9,7 +9,7 @@
 #include "Outils.hpp"
 
 //in samples
-static const int CROSSFADE_SIZE = 100;
+static const int CROSSFADE_SIZE = 10000;
 static const int NUMBER_OF_HEADS = 4;
 
 namespace noi {
@@ -85,8 +85,10 @@ std::vector<float> m_buffer;
 std::vector<float> m_crossfade_buffer;
 int m_write;
 
+bool crossfading{};
+
 float m_read_reference{};
-int m_read_offset{};
+float m_read_offset{};
 float distance{};
 float read_speed{};
 float crossfade_read_head{};

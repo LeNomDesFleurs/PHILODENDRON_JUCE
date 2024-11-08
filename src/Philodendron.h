@@ -17,6 +17,14 @@
 #include "RingBuffer.hpp"
 namespace noi {
 
+class ExchangeBuffer{
+  public:
+  std::mutex mutex;
+  float dry_wet;
+  float feedback;
+  ExchangeBuffer() : dry_wet{0}, feedback{0}, mutex{} {}
+};
+
 class Philodendron {
  public:
   /// @brief Parameters of a stereoMoorer Reverb
@@ -29,16 +37,21 @@ class Philodendron {
     bool freeze;
     float dry_wet, comb_time, variation, feedback, nb_head, head_ratio, read_offset;
   };
-  Philodendron(noi::Philodendron::Parameters parameters, int sample_rate);
+  float prev_offset;
+  Philodendron(noi::Philodendron::Parameters parameters, int sample_rate, std::shared_ptr<ExchangeBuffer>& _exchange_buffer);
   void reset(noi::Philodendron::Parameters parameters, int sample_rate);
   void updateParameters(noi::Philodendron::Parameters parameters);
   void setSampleRate(float sample_rate);
   std::array<float, 2> processStereo(std::array<float, 2> inputs);
   void setFreeze();
   void resize();
+  void updateExchangeBuffer();
 
  private:
   std::array<noi::RingBuffer, 2> m_ring_buffers;
+  std::shared_ptr<ExchangeBuffer> exchange_buffer;
+
+  int update_exchange_buffer;
 
   noi::Philodendron::Parameters m_parameters;
   noi::Philodendron::Parameters m_old_parameters;

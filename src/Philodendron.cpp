@@ -14,10 +14,11 @@ static const float MAX_COMB_SIZE = 4.f;
 namespace noi {
 using noi::RingBuffer;
 
-Philodendron::Philodendron(noi::Philodendron::Parameters parameters, int sample_rate)
+Philodendron::Philodendron(noi::Philodendron::Parameters parameters, int sample_rate, std::shared_ptr<noi::ExchangeBuffer>& _exchange_buffer)
   : m_ring_buffers { {RingBuffer(4.f, 2.f, sample_rate), RingBuffer(4.f, 2.f, sample_rate)} }
   , m_old_parameters {parameters}
   , m_parameters {parameters}
+  , exchange_buffer {_exchange_buffer}
 {
   updateParameters(parameters);
   // m_allpasses[0].setGain(0.9);
@@ -36,11 +37,12 @@ void Philodendron::updateParameters(noi::Philodendron::Parameters parameters) {
   // setTime();     // time
   setFreeze();   // freeze
   resize();  // variation + comb
-  
+
+  prev_offset = noi::Outils::slewValue(m_parameters.read_offset, prev_offset, 0.95);
 
   for (int i = 0; i != 2; i++)
   {
-    m_ring_buffers[i].setReadOffset(m_parameters.read_offset);
+    m_ring_buffers[i].setReadOffset(prev_offset);
     m_ring_buffers[i].active_heads = m_parameters.nb_head;
     m_ring_buffers[i].setHeadsReadSpeed(m_parameters.variation, m_parameters.head_ratio);
   }
@@ -84,6 +86,14 @@ void Philodendron::setFreeze() {
   }
 }
 
+void Philodendron::updateExchangeBuffer(){
+  if(this->exchange_buffer->mutex.try_lock()){
+    exchange_buffer->dry_wet = this->m_parameters.dry_wet;
+    exchange_buffer->feedback = this->m_parameters.feedback;
+    exchange_buffer->mutex.unlock();
+  }
+}
+
 // more variation -> more diffrence of gain between combs
 void Philodendron::resize() {
   for (int i = 0; i < 2; i++) {
@@ -102,6 +112,12 @@ void Philodendron::setSampleRate(float sample_rate) {
 
 std::array<float, 2> Philodendron::processStereo(std::array<float, 2> inputs) {
   
+  if (update_exchange_buffer == 1000){
+    update_exchange_buffer = 0;
+    updateExchangeBuffer();
+  }
+  update_exchange_buffer++;
+
   // Sum all combs for each channels
   for (int i = 0; i < 2; i++) {
     float output = m_ring_buffers[i].readSample();

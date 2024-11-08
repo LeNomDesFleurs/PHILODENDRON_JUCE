@@ -58,6 +58,7 @@ class PhilodendronProcessor : public juce::AudioProcessor {
    juce::AudioProcessorValueTreeState apvts{*this, nullptr, "Parameters",
                                            createParameterLayout()};
  private:
+  std::shared_ptr<noi::ExchangeBuffer> exchange_buffer;
   noi::Philodendron::Parameters philodendron_parameters{false, 0.5F, 0.01f, 0.1f,
                                                      0.1f};
   noi::Philodendron philodendron;

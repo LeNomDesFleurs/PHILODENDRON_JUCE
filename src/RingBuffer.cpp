@@ -31,11 +31,14 @@ void RingBuffer::setDelayTime(float delay_time) {
   float delay_in_samples =
       noi::Outils::convertMsToSample(delay_time * 1000.f, sample_rate);
   m_size_goal =
-      noi::Outils::clipValue(delay_in_samples, 2000, m_buffer_size - 1);
+      noi::Outils::clipValue(delay_in_samples, 10, m_buffer_size - 1);
+  if (m_buffer_mode == freeze){
+    m_actual_size = noi::Outils::clipValue(delay_in_samples, 10, m_buffer_size - 1);
+  }
 }
 
 void RingBuffer::setReadOffset(float offset){
-  m_read_offset = (int)((float)m_buffer_size * offset);
+  m_read_offset = ((float)m_buffer_size * offset);
 }
 
 void RingBuffer::setSampleRate(float _sample_rate) {
@@ -72,6 +75,15 @@ void RingBuffer::checkForReadIndexOverFlow() {
   }
   if (m_read_reference > m_buffer_size) {
     m_read_reference -= m_buffer_size;
+  }
+  }
+
+    while (m_read < 0 || m_read > m_buffer_size){
+  if (m_read < 0) {
+    m_read += m_buffer_size;
+  }
+  if (m_read > m_buffer_size) {
+    m_read -= m_buffer_size;
   }
   }
 }
@@ -114,14 +126,16 @@ float RingBuffer::readSample() {
   float sample = interpolate();
   // those functions modify the m_output_sample value
 
-
-  if (heads[i].distance < CROSSFADE_SIZE && heads[i].read_speed<1.0){
-    m_read = m_write - heads[i].distance;
+//reverse crossfade
+  if (heads[i].distance < CROSSFADE_SIZE && heads[i].read_speed<0.f){
+    m_read = (float)m_write - heads[i].distance;
     float crossfade_sample = interpolate();
     sample = noi::Outils::equalPowerCrossfade(sample, crossfade_sample, heads[i].distance / (float) CROSSFADE_SIZE);
   }
-  else if((m_actual_size - heads[i].distance)<CROSSFADE_SIZE&&heads[i].read_speed>1.0){
-    m_read = m_read_reference + (m_actual_size - heads[i].distance) - ;
+  // crossfade
+  else if((m_actual_size - heads[i].distance)<CROSSFADE_SIZE&&heads[i].read_speed>0.f){
+
+    m_read = m_read_reference + ((float)m_actual_size - heads[i].distance);
     float crossfade_sample = interpolate();
     sample = noi::Outils::equalPowerCrossfade(sample, crossfade_sample, (m_actual_size - heads[i].distance) / (float) CROSSFADE_SIZE);
   }

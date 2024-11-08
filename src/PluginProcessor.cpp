@@ -23,7 +23,8 @@ PhilodendronProcessor::PhilodendronProcessor()
 #endif
       )
 #endif
-,philodendron{philodendron_parameters, 44100}
+,exchange_buffer{new noi::ExchangeBuffer()}
+,philodendron{philodendron_parameters, 44100, exchange_buffer}
 {
 }
 
@@ -178,11 +179,11 @@ juce::AudioProcessorValueTreeState::ParameterLayout layout;
   layout.add(std::make_unique<FloatParam>(
       "variation", "variation", FloatRange(-4.f, 2.f, 0.00001f, 1.0f, true), 0.0f));
   layout.add(std::make_unique<FloatParam>(
-      "comb_time", "comb_time", FloatRange(0.01f, 3.9f, 0.0001f, 0.3f), 1.f));
+      "comb_time", "comb_time", FloatRange(0.0001f, 3.9f, 0.0001f, 0.3f), 1.f));
   layout.add(std::make_unique<FloatParam>(
       "feedback", "feedback", FloatRange(0.0f, 1.0f, 0.0001f, 2.f), 0.3f));
   layout.add(std::make_unique<FloatParam>("read_offset", "read_offset", 
-  FloatRange(-1.f, 1.f, 0.0001f, 1.f), 0.f));
+  FloatRange(-1.f, 1.f, 0.00001f, 1.f), 0.f));
   layout.add(std::make_unique<FloatParam>(
       "head_ratio", "head_ratio", FloatRange(0.f, 4.f, 0.0001, 1.f), 1.f));
   layout.add(std::make_unique<FloatParam>("nb_head", "nb_head",
@@ -196,7 +197,7 @@ bool PhilodendronProcessor::hasEditor() const {
 }
 
 juce::AudioProcessorEditor *PhilodendronProcessor::createEditor() {
-  return new PhilodendronEditor(*this, apvts);
+  return new PhilodendronEditor(*this, apvts, exchange_buffer);
 }
 
 //==============================================================================
