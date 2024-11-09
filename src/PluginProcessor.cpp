@@ -153,7 +153,7 @@ noi::Philodendron::Parameters PhilodendronProcessor::getSettings() {
 
   settings.dry_wet = apvts.getRawParameterValue("dry_wet")->load();
   settings.comb_time = apvts.getRawParameterValue("comb_time")->load();
-  settings.variation = apvts.getRawParameterValue("variation")->load();
+  settings.read_speed = apvts.getRawParameterValue("read_speed")->load();
   settings.feedback = apvts.getRawParameterValue("feedback")->load();
   settings.head_ratio = apvts.getRawParameterValue("head_ratio")->load();
   settings.nb_head = apvts.getRawParameterValue("nb_head")->load();
@@ -177,7 +177,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout layout;
   layout.add(std::make_unique<FloatParam>(
       "dry_wet", "dry_wet", FloatRange(0.f, 1.f, 0.01f, 1.f), 1.f));
   layout.add(std::make_unique<FloatParam>(
-      "variation", "variation", FloatRange(-4.f, 2.f, 0.00001f, 1.0f, true), 0.0f));
+      "read_speed", "read_speed", FloatRange(-4.f, 2.f, 0.00001f, 1.0f, true), 0.0f));
   layout.add(std::make_unique<FloatParam>(
       "comb_time", "comb_time", FloatRange(0.0001f, 3.9f, 0.0001f, 0.3f), 1.f));
   layout.add(std::make_unique<FloatParam>(

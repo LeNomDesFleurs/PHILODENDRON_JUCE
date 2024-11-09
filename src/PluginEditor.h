@@ -17,6 +17,45 @@
 /**
  */
 
+class Positions {
+public:
+int diameter;
+
+juce::Rectangle<float> read_offset;
+juce::Rectangle<float> buffer_size;
+juce::Rectangle<float> head_ratio;
+juce::Rectangle<float> read_speed;
+juce::Rectangle<float> head_number;
+juce::Rectangle<float> feedback;
+juce::Rectangle<float> dry_wet;
+
+std::vector<juce::Rectangle<float>*> positions;
+
+Positions() : diameter{400} { 
+  
+  // first component will be the outer component, growing inward
+  positions.insert(positions.end(), {
+    &buffer_size,
+    &read_offset, 
+    &head_ratio,
+    &read_speed,
+    &head_number,
+    &feedback,
+    &dry_wet
+    });
+
+  float slider_thickness = (diameter / 2) / positions.size();
+  float current_radius = diameter / 2;
+
+  for (auto* position : positions){
+    float x = (diameter / 2) - current_radius;
+    float width = current_radius * 2;
+    *position = juce::Rectangle<float>(x, x, width, width);
+    current_radius -= slider_thickness;
+  }
+ }
+};
+
 class circleSlider : public juce::Slider {
   bool hitTest(int x, int y) override {
     int h = this->getWidth() / 2;
@@ -77,12 +116,15 @@ public juce::Timer{
 
   EmptyKnob emptyKnobLookAndFeel;
 
+  Positions positions;
+
   void paintDryWetWidget(juce::Graphics &g);
   void paintFeedbackWidget(juce::Graphics &g);
+  void paintReadSpeed(juce::Graphics& g);
 
-  circleSlider variationSlider;
+  circleSlider readSpeedSlider;
   circleSlider feedbackSlider;
-  circleSlider combSizeSlider;
+  circleSlider bufferSizeSlider;
   circleSlider dryWetSlider;
   circleSlider nbHeadSlider;
   circleSlider headRatioSlider;
@@ -98,9 +140,7 @@ public juce::Timer{
   std::unique_ptr<Attachment> readOffsetAttachement;
 
   std::shared_ptr<noi::ExchangeBuffer> exchange_buffer;
-
-  float dry_wet{};
-  float feedback{};
+  noi::ExchangeBuffer::Content parameters;
 
   // This reference is provided as a quick way for your editor to
   // access the processor object that created it.

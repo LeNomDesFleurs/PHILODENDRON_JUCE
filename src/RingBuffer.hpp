@@ -19,16 +19,16 @@ namespace noi {
 //if the read speed is different from 0
 //loop between the write and read_reference pointer
 //if freezed, loop in the whole buffer
-class RingBuffer {
+class StereoRingBuffer {
  public:
-  RingBuffer(float max_time, float initial_delay, int _sample_rate);
+  StereoRingBuffer(float max_time, float initial_delay, int _sample_rate);
   void reset(float max_time, float initial_delay, int _sample_rate);
-  float readSample();
-  void writeSample(float input_sample);
-  float interpolate();
-  float linearInterpolation();
-  float noInterpolation();
-  float allpassInterpolation();
+  std::array<float, 2> readSample();
+  void writeSample(std::array<float, 2> input_samples);
+  float interpolate(int index);
+  float linearInterpolation(int index);
+  float noInterpolation(int index);
+  float allpassInterpolation(int index);
   void incrementReadPointerReference();
   void freezeIncrementReadPointerReference();
   void setStepSize(float step_size);
@@ -81,7 +81,7 @@ enum BufferMode { normal, accumulate, freeze, reverse, repitch };
 BufferMode m_buffer_mode{normal};
 enum InterpolationMode { none, linear, allpass };
 InterpolationMode interpolation_mode = linear;
-std::vector<float> m_buffer;
+std::array<std::vector<float>, 2> m_buffers;
 std::vector<float> m_crossfade_buffer;
 int m_write;
 
@@ -108,7 +108,7 @@ int m_size_goal;
 int m_buffer_size;
 float m_actual_size{};
 float m_size_on_freeze{};
-float m_output_sample{};
+std::array<float, 2> m_output_samples{};
 float m_distance_to_cover{};
 bool new_size{false};
 bool ready_to_lock{false};

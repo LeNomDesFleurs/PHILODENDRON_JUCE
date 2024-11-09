@@ -12,6 +12,7 @@
 
 #include <cmath>
 #include <vector>
+#include <array>
 const float cheappi{3.14159265359};
 
 namespace noi {
@@ -51,6 +52,7 @@ float linearCrossfade(float dry, float wet, float parameter);
 /// @param parameter 0 full dry / 1 full wet
 /// @return Sum of weighted dry and wet
 float equalPowerCrossfade(float dry, float wet, float parameter);
+std::array<float, 2> equalPowerCrossfade(std::array<float, 2> dry, std::array<float, 2> wet, float parameter);
 
 class LFO {
  public:

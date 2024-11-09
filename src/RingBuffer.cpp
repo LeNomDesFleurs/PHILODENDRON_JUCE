@@ -5,28 +5,30 @@ namespace noi {
 /// @brief constructor for ring buffer
 /// @param max_time in seconds
 /// @param initial_delay in seconds
-RingBuffer::RingBuffer(float max_time, float initial_delay, int _sample_rate)
+StereoRingBuffer::StereoRingBuffer(float max_time, float initial_delay, int _sample_rate)
     : sample_rate{_sample_rate},
       m_write{(int)(initial_delay * (float)sample_rate)},
       m_actual_size{(float)m_write},
       m_crossfade_buffer(CROSSFADE_SIZE, 0),
-      m_buffer(max_time * (float)sample_rate, 0),
-      m_buffer_size{(int)m_buffer.size() - 1} {}
+      m_buffers{*new std::vector<float>(max_time * (float)sample_rate, 0), *new std::vector<float>(max_time * (float)sample_rate, 0)},
+      m_buffer_size{(int)m_buffers[0].size() - 1} {}
 
-void RingBuffer::reset(float max_time, float initial_delay, int _sample_rate) {
+void StereoRingBuffer::reset(float max_time, float initial_delay, int _sample_rate) {
   sample_rate = _sample_rate;
   m_write = (int)(initial_delay * (float)sample_rate);
   m_actual_size = (float)m_write;
-  m_buffer.resize(max_time * (float)sample_rate);
-  fill(m_buffer.begin(), m_buffer.end(), 0.f);
-  m_buffer_size = (int)m_buffer.size() - 1;
+  for (int i = 0; i < 2; i++){ 
+    m_buffers[i].resize(max_time * (float)sample_rate);
+    fill(m_buffers[i].begin(), m_buffers[i].end(), 0.f);
+  }
+  m_buffer_size = (int)m_buffers.size() - 1;
 }
-void RingBuffer::setStepSize(float step_size) { m_step_size = step_size; }
+void StereoRingBuffer::setStepSize(float step_size) { m_step_size = step_size; }
 
 /// @brief Take a delay time in milliseconds, clip it within the defined max
 /// buffer size and set the goal to reach.
 /// @param delay_time in milliseconds
-void RingBuffer::setDelayTime(float delay_time) {
+void StereoRingBuffer::setDelayTime(float delay_time) {
   new_size = true;
   float delay_in_samples =
       noi::Outils::convertMsToSample(delay_time * 1000.f, sample_rate);
@@ -37,22 +39,22 @@ void RingBuffer::setDelayTime(float delay_time) {
   }
 }
 
-void RingBuffer::setReadOffset(float offset){
+void StereoRingBuffer::setReadOffset(float offset){
   m_read_offset = ((float)m_buffer_size * offset);
 }
 
-void RingBuffer::setSampleRate(float _sample_rate) {
+void StereoRingBuffer::setSampleRate(float _sample_rate) {
   sample_rate = _sample_rate;
 }
 
-void RingBuffer::setHeadsReadSpeed(float base_read_speed, float ratio){
+void StereoRingBuffer::setHeadsReadSpeed(float base_read_speed, float ratio){
   heads[0].read_speed = base_read_speed;
   for (int i = 1; i < NUMBER_OF_HEADS; i++) {
     heads[i].read_speed = heads[i - 1].read_speed * ratio;
   }
 }
 
-void RingBuffer::setFreezed(bool freezed) {
+void StereoRingBuffer::setFreezed(bool freezed) {
   // avoid updating the m_size_on_freeze
   // if (m_buffer_mode != freeze && m_buffer_mode != accumulate && freezed) {
   //   m_size_on_freeze = getActualSize();
@@ -63,12 +65,12 @@ void RingBuffer::setFreezed(bool freezed) {
   m_buffer_mode = freezed ? freeze : normal;
 }
 
-void RingBuffer::freezedUpdateStepSize() {
+void StereoRingBuffer::freezedUpdateStepSize() {
   float step_size_goal = m_size_on_freeze / m_size_goal;
   m_step_size = noi::Outils::slewValue(step_size_goal, m_step_size, 0.9999);
 }
 
-void RingBuffer::checkForReadIndexOverFlow() {
+void StereoRingBuffer::checkForReadIndexOverFlow() {
   while (m_read_reference < 0 || m_read_reference > m_buffer_size){
   if (m_read_reference < 0) {
     m_read_reference += m_buffer_size;
@@ -88,7 +90,7 @@ void RingBuffer::checkForReadIndexOverFlow() {
   }
 }
 
-float RingBuffer::getActualSize() {
+float StereoRingBuffer::getActualSize() {
   float temp_read = m_read_reference;
   if (m_read_reference > (float)m_write) temp_read -= m_buffer_size;
   float output = (float)m_write - temp_read;
@@ -96,12 +98,12 @@ float RingBuffer::getActualSize() {
 }
 
 /// @brief increment read pointer and return sample from interpolation
-float RingBuffer::readSample() {
+std::array<float, 2> StereoRingBuffer::readSample() {
   if (m_buffer_mode == reverse) {
     m_step_size = 0. - m_step_size;
   }
 
-  m_output_sample = 0;
+  m_output_samples = {0.f, 0.f};
 
     if (m_buffer_mode == freeze) {
       freezeIncrementReadPointerReference();
@@ -111,68 +113,71 @@ float RingBuffer::readSample() {
       incrementReadPointerReference();
     }
 
+    for (int channel = 0; channel<2; channel++){
 
+      for (int i = 0; i < active_heads; i++) {
+        heads[i].increment(m_actual_size);
 
-  for (int i = 0; i < active_heads; i++){
-    heads[i].increment(m_actual_size);
+        m_read = m_read_reference + heads[i].distance;
 
+        if (m_buffer_mode == freeze) {
+          m_read += m_read_offset;
+        }
 
-  m_read = m_read_reference + heads[i].distance;
+        float sample = interpolate(channel);
+        // those functions modify the m_output_sample value
 
-  if (m_buffer_mode==freeze){
-    m_read += m_read_offset;
-  }
+        // reverse crossfade
+        if (heads[i].distance < CROSSFADE_SIZE && heads[i].read_speed < 0.f) {
+          m_read = (float)m_write - heads[i].distance;
+          float crossfade_sample = interpolate(channel);
+          sample = noi::Outils::equalPowerCrossfade(
+              sample, crossfade_sample,
+              heads[i].distance / (float)CROSSFADE_SIZE);
+        }
+        // crossfade
+        else if ((m_actual_size - heads[i].distance) < CROSSFADE_SIZE &&
+                 heads[i].read_speed > 0.f) {
+          m_read =
+              m_read_reference + ((float)m_actual_size - heads[i].distance);
+          float crossfade_sample = interpolate(channel);
+          sample = noi::Outils::equalPowerCrossfade(
+              sample, crossfade_sample,
+              (m_actual_size - heads[i].distance) / (float)CROSSFADE_SIZE);
+        }
 
-  float sample = interpolate();
-  // those functions modify the m_output_sample value
+        // if (m_buffer_mode == freeze) {
+        //   m_output_sample *=
+        //       noi::Outils::clipValue(1.f / pow(m_step_size, 0.5), 0.2, 3.);
+        // }
 
-//reverse crossfade
-  if (heads[i].distance < CROSSFADE_SIZE && heads[i].read_speed<0.f){
-    m_read = (float)m_write - heads[i].distance;
-    float crossfade_sample = interpolate();
-    sample = noi::Outils::equalPowerCrossfade(sample, crossfade_sample, heads[i].distance / (float) CROSSFADE_SIZE);
-  }
-  // crossfade
-  else if((m_actual_size - heads[i].distance)<CROSSFADE_SIZE&&heads[i].read_speed>0.f){
-
-    m_read = m_read_reference + ((float)m_actual_size - heads[i].distance);
-    float crossfade_sample = interpolate();
-    sample = noi::Outils::equalPowerCrossfade(sample, crossfade_sample, (m_actual_size - heads[i].distance) / (float) CROSSFADE_SIZE);
-  }
-
-  // if (m_buffer_mode == freeze) {
-  //   m_output_sample *=
-  //       noi::Outils::clipValue(1.f / pow(m_step_size, 0.5), 0.2, 3.);
-  // }
-
-  m_output_sample
-    += sample;
-  }
-
-  m_output_sample /= (float)active_heads;
-
-  return m_output_sample;
+        m_output_samples[channel] += sample;
+      }
+  m_output_samples[channel] /= (float)active_heads;
 }
 
-float RingBuffer::interpolate(){
+  return m_output_samples;
+}
+
+float StereoRingBuffer::interpolate(int index){
   checkForReadIndexOverFlow();
   fractionalizeReadIndex();
   switch (interpolation_mode) {
     case none:
-      return noInterpolation();
+      return noInterpolation(index);
       break;
     case linear:
-      return linearInterpolation();
+      return linearInterpolation(index);
       break;
     case allpass:
-      return allpassInterpolation();
+      return allpassInterpolation(index);
       break;
   }
 }
 
 /// @brief Triggered at each sample, update the step size and the m_actual_size
 /// to keep up with change of size goal
-void RingBuffer::updateStepSize() {
+void StereoRingBuffer::updateStepSize() {
   float step_size_goal = 1.0;
   m_actual_size = getActualSize();
   // big sample limit to account for inertia
@@ -197,11 +202,11 @@ void RingBuffer::updateStepSize() {
   }
 }
 /// @brief increment pointer and set its int, incremented int and frac value
-void RingBuffer::incrementReadPointerReference() {
+void StereoRingBuffer::incrementReadPointerReference() {
   m_read_reference += m_step_size;
   checkForReadIndexOverFlow();
 }
-void RingBuffer::fractionalizeReadIndex() {
+void StereoRingBuffer::fractionalizeReadIndex() {
   // get sample
   m_i_read = static_cast<int>(trunc(m_read));
   // get fraction
@@ -210,7 +215,7 @@ void RingBuffer::fractionalizeReadIndex() {
   m_i_read_next = (m_i_read + 1) > m_buffer_size ? 0 : (m_i_read + 1);
 }
 
-void RingBuffer::freezeIncrementReadPointerReference() {
+void StereoRingBuffer::freezeIncrementReadPointerReference() {
   // m_read_reference += m_step_size;
   // buffer over and under flow
   // checkForReadIndexOverFlow();
@@ -230,13 +235,13 @@ void RingBuffer::freezeIncrementReadPointerReference() {
   // }
 }
 
-float RingBuffer::noInterpolation() { return m_buffer[m_i_read]; }
+float StereoRingBuffer::noInterpolation(int index) { return m_buffers[index][m_i_read]; }
 
 /// @brief Interpolation lineaire du buffer a un index flottant donne
-float RingBuffer::linearInterpolation() {
+float StereoRingBuffer::linearInterpolation(int index) {
   // S[n]=frac * Buf[i+1]+(1-frac)*Buf[i]
 
-  return (m_frac * m_buffer[m_i_read_next]) + ((1 - m_frac) * m_buffer[m_i_read]);
+  return (m_frac * m_buffers[index][m_i_read_next]) + ((1 - m_frac) * m_buffers[index][m_i_read]);
 
 
 }
@@ -245,19 +250,22 @@ float RingBuffer::linearInterpolation() {
 
 
 /// @brief Interpolation passe-tout, recursion
-float RingBuffer::allpassInterpolation() {
+float StereoRingBuffer::allpassInterpolation(int index) {
   // S[n]=Buf[i+1]+(1-frac)*Buf[i]-(1-frac)*S[n-1]
-  return (m_buffer[m_i_read + 1]) +
-                    ((1 - m_frac) * m_buffer[m_i_read]) -
-                    ((1 - m_frac) * m_output_sample);
+  return (m_buffers[index][m_i_read + 1]) +
+                    ((1 - m_frac) * m_buffers[index][m_i_read]) -
+                    ((1 - m_frac) * m_output_samples[index]);
 }
 
 /// @brief increment write pointer and write input sample in buffer
 /// @param input_sample
-void RingBuffer::writeSample(float input_sample) {
+void StereoRingBuffer::writeSample(std::array<float, 2> input_samples) {
   // if (m_buffer_mode == normal || m_buffer_mode == reverse) {
     m_write = (m_write + 1) % m_buffer_size;
-    m_buffer[m_write] = input_sample;
+    for (int i = 0; i < 2; i++) 
+    {
+    m_buffers[i][m_write] = input_samples[i];
+    }
     // m_buffer[0] = input_sample;
   // } else if (m_buffer_mode == accumulate) {
   //   if (accumulate_count != CROSSFADE_SIZE) {
@@ -271,17 +279,18 @@ void RingBuffer::writeSample(float input_sample) {
   // }
 }
 
-void RingBuffer::crossfade() {
-  for (int i = CROSSFADE_SIZE - 1; i >= 0; i--) {
-    int buffer_index = (m_write + i + 1) % m_buffer_size;
-    float coef = (float)i / (float)(CROSSFADE_SIZE - 1);
+void StereoRingBuffer::crossfade() {
+  for (int buffer_channel = 0; buffer_channel < 2; buffer_channel++){
+    for (int i = CROSSFADE_SIZE - 1; i >= 0; i--) {
+      int buffer_index = (m_write + i + 1) % m_buffer_size;
+      float coef = (float)i / (float)(CROSSFADE_SIZE - 1);
 
-    // std::cout<< m_crossfade_buffer[i]<<'-' << m_buffer[buffer_index]<< '-'
-    // <<coef;
-    m_buffer[buffer_index] = noi::Outils::linearCrossfade(
-        m_crossfade_buffer[i], m_buffer[buffer_index], coef);
-    // std::cout << '\n';
-  }
+      // std::cout<< m_crossfade_buffer[i]<<'-' << m_buffer[buffer_index]<< '-'
+      // <<coef;
+      m_buffers[buffer_channel][buffer_index] = noi::Outils::linearCrossfade(
+          m_crossfade_buffer[i], m_buffers[buffer_channel][buffer_index], coef);
+      // std::cout << '\n';
+    }}
 }
 
 

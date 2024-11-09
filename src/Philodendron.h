@@ -18,11 +18,20 @@
 namespace noi {
 
 class ExchangeBuffer{
-  public:
-  std::mutex mutex;
-  float dry_wet;
+ public:
+  class Content{
+    public:
   float feedback;
-  ExchangeBuffer() : dry_wet{0}, feedback{0}, mutex{} {}
+  float dry_wet;
+  float read_ref;
+  float write;
+  float head_position;
+  float read_speed;
+  float head_ratio;
+  };
+
+  std::mutex mutex;
+  Content content;
 };
 
 class Philodendron {
@@ -31,11 +40,11 @@ class Philodendron {
   /// @param freeze
   /// @param drywet from 0 to 1
   /// @param comb_time
-  /// @param variation
+  /// @param read_speed
   /// @param feedback
   struct Parameters {
     bool freeze;
-    float dry_wet, comb_time, variation, feedback, nb_head, head_ratio, read_offset;
+    float dry_wet, comb_time, read_speed, feedback, nb_head, head_ratio, read_offset;
   };
   float prev_offset;
   Philodendron(noi::Philodendron::Parameters parameters, int sample_rate, std::shared_ptr<ExchangeBuffer>& _exchange_buffer);
@@ -48,7 +57,7 @@ class Philodendron {
   void updateExchangeBuffer();
 
  private:
-  std::array<noi::RingBuffer, 2> m_ring_buffers;
+  noi::StereoRingBuffer m_ring_buffer;
   std::shared_ptr<ExchangeBuffer> exchange_buffer;
 
   int update_exchange_buffer;

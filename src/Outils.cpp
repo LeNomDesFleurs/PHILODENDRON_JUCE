@@ -25,6 +25,7 @@ float slewValue(float new_value, float old_value, float slew_factor) {
   return (new_value * (1.0 - slew_factor)) + (old_value * (slew_factor));
 }
 
+
 /// @brief convert milliseconds to samples
 /// @param time in seconds
 /// @param sample_rate sample / secondes in Hz
@@ -79,6 +80,18 @@ float equalPowerCrossfade(float dry, float wet, float parameter) {
   float volumes_dry = sqrt(0.5f * (1.f + parameter));
   float volumes_wet = sqrt(0.5f * (1.f - parameter));
   return (dry * volumes_dry) + (wet * volumes_wet);
+}
+
+std::array<float, 2> equalPowerCrossfade(std::array<float, 2> dry, std::array<float, 2> wet, float parameter){
+  std::array<float, 2> output;
+    parameter = 1. - parameter;
+    parameter = (parameter - 0.5) * 2;
+    float volumes_dry = sqrt(0.5f * (1.f + parameter));
+    float volumes_wet = sqrt(0.5f * (1.f - parameter));
+  for (int i = 0; i < 2; i++) {
+    output[i] = (dry[i] * volumes_dry) + (wet[i] * volumes_wet);
+  }
+  return output;
 }
 
 LFO::LFO(float sampleRate, float frequence) 
