@@ -46,7 +46,6 @@ class Philodendron {
     bool freeze;
     float dry_wet, comb_time, read_speed, feedback, nb_head, head_ratio, read_offset;
   };
-  float prev_offset;
   Philodendron(noi::Philodendron::Parameters parameters, int sample_rate, std::shared_ptr<ExchangeBuffer>& _exchange_buffer);
   void reset(noi::Philodendron::Parameters parameters, int sample_rate);
   void updateParameters(noi::Philodendron::Parameters parameters);
@@ -60,8 +59,9 @@ class Philodendron {
   noi::StereoRingBuffer m_ring_buffer;
   std::shared_ptr<ExchangeBuffer> exchange_buffer;
 
-  int update_exchange_buffer;
+  int update_exchange_buffer {};
 
+  float prev_offset{};
   noi::Philodendron::Parameters m_parameters;
   noi::Philodendron::Parameters m_old_parameters;
   std::array<float, 2> m_outputs{0, 0};

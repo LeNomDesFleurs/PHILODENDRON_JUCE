@@ -15,7 +15,7 @@ namespace noi {
 using noi::StereoRingBuffer;
 
 Philodendron::Philodendron(noi::Philodendron::Parameters parameters, int sample_rate, std::shared_ptr<noi::ExchangeBuffer>& _exchange_buffer)
-  : m_ring_buffer { StereoRingBuffer(4.f, 2.f, sample_rate) }
+  : m_ring_buffer { StereoRingBuffer(8.f, 2.f, sample_rate) }
   , m_old_parameters {parameters}
   , m_parameters {parameters}
   , exchange_buffer {_exchange_buffer}
@@ -26,7 +26,7 @@ Philodendron::Philodendron(noi::Philodendron::Parameters parameters, int sample_
 }
 
 void Philodendron::reset(noi::Philodendron::Parameters parameters, int sample_rate){
-  m_ring_buffer.reset(4.f, 2.f, sample_rate);
+  m_ring_buffer.reset(8.f, 2.f, sample_rate);
 updateParameters(parameters);
 }
 
@@ -90,11 +90,11 @@ void Philodendron::updateExchangeBuffer(){
     exchange_buffer->content.feedback = this->m_parameters.feedback;
     exchange_buffer->content.read_speed = this->m_parameters.read_speed;
     exchange_buffer->content.read_ref =
-        (float)this->m_ring_buffer.m_buffer_size /
-        (float)this->m_ring_buffer.m_read_reference;
-      exchange_buffer->content.write =
-        (float)this->m_ring_buffer.m_buffer_size /
-        (float)this->m_ring_buffer.m_write;
+        (float)this->m_ring_buffer.m_read_reference/
+    (float)this->m_ring_buffer.m_buffer_size;
+    exchange_buffer->content.write = 
+                                     (float)this->m_ring_buffer.m_write/
+    (float)this->m_ring_buffer.m_buffer_size;
     exchange_buffer->content.head_ratio = this->m_parameters.head_ratio;
     exchange_buffer->mutex.unlock();
   }
@@ -124,7 +124,6 @@ std::array<float, 2> Philodendron::processStereo(std::array<float, 2> inputs) {
   }
   update_exchange_buffer++;
 
-  // Sum all combs for each channels
     m_outputs = m_ring_buffer.readSample();
 
     m_outputs = 

@@ -20,7 +20,8 @@
 class Positions {
 public:
 int diameter;
-
+float slider_thickness;
+float center;
 juce::Rectangle<float> read_offset;
 juce::Rectangle<float> buffer_size;
 juce::Rectangle<float> head_ratio;
@@ -28,10 +29,10 @@ juce::Rectangle<float> read_speed;
 juce::Rectangle<float> head_number;
 juce::Rectangle<float> feedback;
 juce::Rectangle<float> dry_wet;
-
+ 
 std::vector<juce::Rectangle<float>*> positions;
 
-Positions() : diameter{400} { 
+Positions() : diameter{400} , center{diameter/2.f}{ 
   
   // first component will be the outer component, growing inward
   positions.insert(positions.end(), {
@@ -44,7 +45,7 @@ Positions() : diameter{400} {
     &dry_wet
     });
 
-  float slider_thickness = (diameter / 2) / positions.size();
+  slider_thickness = (diameter / 2) / positions.size();
   float current_radius = diameter / 2;
 
   for (auto* position : positions){
@@ -90,7 +91,7 @@ class PlaceHolder : public juce::LookAndFeel_V4 {
                         juce::Slider& slider) override {
     juce::Path p;
     p.addRectangle(x, y, width, height);
-    g.setColour(juce::Colour::fromString("80800000"));
+    g.setColour(juce::Colour::fromString("40800000"));
     g.fillPath(p);
   };
 };
@@ -115,12 +116,19 @@ public juce::Timer{
   std::vector<juce::Slider *> getComps();
 
   EmptyKnob emptyKnobLookAndFeel;
+  PlaceHolder placeHolderLookAndFeel;
 
   Positions positions;
 
   void paintDryWetWidget(juce::Graphics &g);
   void paintFeedbackWidget(juce::Graphics &g);
   void paintReadSpeed(juce::Graphics& g);
+  void paintReadOffset(juce::Graphics& g);
+  void paintBufferSize(juce::Graphics& g);
+
+  juce::Line<float> buildRadiusSegment(float center_x, float center_y,
+                                       float angle, float distance,
+                                       float length);
 
   circleSlider readSpeedSlider;
   circleSlider feedbackSlider;

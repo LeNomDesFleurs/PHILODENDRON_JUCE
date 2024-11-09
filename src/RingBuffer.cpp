@@ -21,7 +21,7 @@ void StereoRingBuffer::reset(float max_time, float initial_delay, int _sample_ra
     m_buffers[i].resize(max_time * (float)sample_rate);
     fill(m_buffers[i].begin(), m_buffers[i].end(), 0.f);
   }
-  m_buffer_size = (int)m_buffers.size() - 1;
+  m_buffer_size = (int)m_buffers[0].size() - 1;
 }
 void StereoRingBuffer::setStepSize(float step_size) { m_step_size = step_size; }
 
@@ -262,9 +262,9 @@ float StereoRingBuffer::allpassInterpolation(int index) {
 void StereoRingBuffer::writeSample(std::array<float, 2> input_samples) {
   // if (m_buffer_mode == normal || m_buffer_mode == reverse) {
     m_write = (m_write + 1) % m_buffer_size;
-    for (int i = 0; i < 2; i++) 
+    for (int channel = 0; channel < 2; channel++) 
     {
-    m_buffers[i][m_write] = input_samples[i];
+    m_buffers[channel][m_write] = input_samples[channel];
     }
     // m_buffer[0] = input_sample;
   // } else if (m_buffer_mode == accumulate) {
