@@ -23,6 +23,7 @@ int diameter;
 float slider_thickness;
 float center;
 juce::Rectangle<float> read_offset;
+juce::Rectangle<float> title;
 juce::Rectangle<float> buffer_size;
 juce::Rectangle<float> head_ratio;
 juce::Rectangle<float> read_speed;
@@ -36,6 +37,7 @@ Positions() : diameter{400} , center{diameter/2.f}{
   
   // first component will be the outer component, growing inward
   positions.insert(positions.end(), {
+    &title,
     &buffer_size,
     &read_offset, 
     &head_ratio,
@@ -43,7 +45,7 @@ Positions() : diameter{400} , center{diameter/2.f}{
     &head_number,
     &feedback,
     &dry_wet
-    });
+  });
 
   slider_thickness = (diameter / 2) / positions.size();
   float current_radius = diameter / 2;
@@ -124,6 +126,9 @@ public juce::Timer{
   void paintFeedbackWidget(juce::Graphics &g);
   void paintReadSpeed(juce::Graphics& g);
   void paintReadOffset(juce::Graphics& g);
+
+  void paintHeadRatio(juce::Graphics& g);
+  void paintNumberOfHeads(juce::Graphics& g);
   void paintBufferSize(juce::Graphics& g);
 
   juce::Line<float> buildRadiusSegment(float center_x, float center_y,
@@ -149,7 +154,8 @@ public juce::Timer{
 
   std::shared_ptr<noi::ExchangeBuffer> exchange_buffer;
   noi::ExchangeBuffer::Content parameters;
-
+  juce::PathStrokeType stroke {PathStrokeType(2.0, PathStrokeType::curved, PathStrokeType::rounded)};
+  juce::PathStrokeType arrow_stroke {PathStrokeType(0.25, PathStrokeType::curved, PathStrokeType::rounded)};
   // This reference is provided as a quick way for your editor to
   // access the processor object that created it.
   PhilodendronProcessor &audioProcessor;

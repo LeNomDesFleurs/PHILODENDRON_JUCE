@@ -28,6 +28,10 @@ class ExchangeBuffer{
   float head_position;
   float read_speed;
   float head_ratio;
+  float head_number;
+  float distance;
+  float read_offset;
+  bool freezed;
   };
 
   std::mutex mutex;

@@ -36,6 +36,7 @@ void StereoRingBuffer::setDelayTime(float delay_time) {
       noi::Outils::clipValue(delay_in_samples, 10, m_buffer_size - 1);
   if (m_buffer_mode == freeze){
     m_actual_size = noi::Outils::clipValue(delay_in_samples, 10, m_buffer_size - 1);
+    m_write = ((int)m_read_reference + (int)m_actual_size) % m_buffer_size;
   }
 }
 
@@ -125,7 +126,6 @@ std::array<float, 2> StereoRingBuffer::readSample() {
         }
 
         float sample = interpolate(channel);
-        // those functions modify the m_output_sample value
 
         // reverse crossfade
         if (heads[i].distance < CROSSFADE_SIZE && heads[i].read_speed < 0.f) {
@@ -187,7 +187,7 @@ void StereoRingBuffer::updateStepSize() {
     // update the step size but with slew for clean repitch
   } else if ((m_actual_size < m_size_goal) && new_size) {
     // m_step_size = 0.5;
-    step_size_goal = 0.5;
+    step_size_goal = 0.25;
   }
 
   m_step_size =
@@ -216,23 +216,7 @@ void StereoRingBuffer::fractionalizeReadIndex() {
 }
 
 void StereoRingBuffer::freezeIncrementReadPointerReference() {
-  // m_read_reference += m_step_size;
-  // buffer over and under flow
-  // checkForReadIndexOverFlow();
-  // m_actual_size -= m_step_size;
-
-  // In freezed case, m_read only iterate on the last buffer size,
-  //  hence it's like a little ringBuffer in the bigger ringBuffer
-  //  so more buffer over and under flow
-  // if (m_actual_size < 0.) {
-  //   m_read -= (float)m_write - m_size_on_freeze;
-  //   checkForReadIndexOverFlow();
-  //   m_actual_size = m_size_on_freeze;
-
-  // } else if (m_actual_size > m_size_on_freeze) {
-  //   m_read = (float)m_write;
-  //   m_actual_size = 0;
-  // }
+  
 }
 
 float StereoRingBuffer::noInterpolation(int index) { return m_buffers[index][m_i_read]; }

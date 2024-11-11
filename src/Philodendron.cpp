@@ -96,6 +96,11 @@ void Philodendron::updateExchangeBuffer(){
                                      (float)this->m_ring_buffer.m_write/
     (float)this->m_ring_buffer.m_buffer_size;
     exchange_buffer->content.head_ratio = this->m_parameters.head_ratio;
+    exchange_buffer->content.distance =
+        (float)this->m_ring_buffer.heads[0].distance / (float)m_ring_buffer.m_actual_size;
+    exchange_buffer->content.head_number = this->m_parameters.nb_head;
+    exchange_buffer->content.freezed = this->m_parameters.freeze;
+    exchange_buffer->content.read_offset = this->m_parameters.read_offset;
     exchange_buffer->mutex.unlock();
   }
 }

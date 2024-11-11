@@ -177,7 +177,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout layout;
   layout.add(std::make_unique<FloatParam>(
       "dry_wet", "dry_wet", FloatRange(0.f, 1.f, 0.01f, 1.f), 1.f));
   layout.add(std::make_unique<FloatParam>(
-      "read_speed", "read_speed", FloatRange(-4.f, 2.f, 0.00001f, 1.0f, true), 0.0f));
+      "read_speed", "read_speed", FloatRange(-4.f, 2.f, 0.000001f, 0.25f, true), 0.0f));
   layout.add(std::make_unique<FloatParam>(
       "comb_time", "comb_time", FloatRange(0.0001f, 3.9f, 0.0001f, 0.3f), 1.f));
   layout.add(std::make_unique<FloatParam>(
@@ -185,7 +185,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout layout;
   layout.add(std::make_unique<FloatParam>("read_offset", "read_offset", 
   FloatRange(-1.f, 1.f, 0.00001f, 1.f), 0.f));
   layout.add(std::make_unique<FloatParam>(
-      "head_ratio", "head_ratio", FloatRange(0.f, 4.f, 0.0001, 1.f), 1.f));
+      "head_ratio", "head_ratio", FloatRange(-4.f, 4.f, 0.0001, 0.5, true), 1.f));
   layout.add(std::make_unique<FloatParam>("nb_head", "nb_head",
                                           FloatRange(1.f, 4.f, 1.f, 1.f), 1.f));
   return layout;
