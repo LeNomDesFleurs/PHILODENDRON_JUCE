@@ -37,7 +37,6 @@ class StereoRingBuffer {
   void freezedUpdateStepSize();
   void setSampleRate(float _sample_rate);
   void setFreezed(bool _freezed);
-  void checkForReadIndexOverFlow();
   void setHeadsReadSpeed(float base_read_speed, float ratio);
   /// @brief Split read index in m_i_read (previous sample) m_i_read_next (next
   /// sample) and m_frac (fractional offset)
@@ -47,24 +46,26 @@ class StereoRingBuffer {
   /// offset between 0 and 1
   void setReadOffset(float offset);
 
-class Head{
-  public:
-  /// @brief distance to read reference
-  float distance{};
-  float read_speed{};
+  template <typename T>
+  void checkForIndexOverflow(T& index);
 
-void increment(int max_distance){
+  class Head {
+   public:
+    /// @brief distance to read reference
+    float distance{};
+    float read_speed{};
 
-    distance += read_speed;
+    void increment(int max_distance) {
+      distance += read_speed;
 
-    if (distance > max_distance) {
-    distance = 0;
-  }
+      if (distance > max_distance) {
+        distance = 0;
+      }
 
-  if (distance < 0){
-    distance = max_distance;
-  }
-}
+      if (distance < 0) {
+        distance = max_distance;
+      }
+    }
 };
 
 std::array<Head, 4> heads;
@@ -83,10 +84,10 @@ enum InterpolationMode { none, linear, allpass };
 InterpolationMode interpolation_mode = linear;
 std::array<std::vector<float>, 2> m_buffers;
 std::vector<float> m_crossfade_buffer;
-int m_write;
 
 bool crossfading{};
 
+int m_write;
 float m_read_reference{};
 float m_read_offset{};
 float distance{};

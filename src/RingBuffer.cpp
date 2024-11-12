@@ -37,6 +37,7 @@ void StereoRingBuffer::setDelayTime(float delay_time) {
   if (m_buffer_mode == freeze){
     m_actual_size = noi::Outils::clipValue(delay_in_samples, 10, m_buffer_size - 1);
     m_write = ((int)m_read_reference + (int)m_actual_size) % m_buffer_size;
+    checkForIndexOverflow(m_write);
   }
 }
 
@@ -71,22 +72,14 @@ void StereoRingBuffer::freezedUpdateStepSize() {
   m_step_size = noi::Outils::slewValue(step_size_goal, m_step_size, 0.9999);
 }
 
-void StereoRingBuffer::checkForReadIndexOverFlow() {
-  while (m_read_reference < 0 || m_read_reference > m_buffer_size){
-  if (m_read_reference < 0) {
-    m_read_reference += m_buffer_size;
+template<typename T>
+void StereoRingBuffer::checkForIndexOverflow(T& index) {
+  while (index < 0 || index > m_buffer_size){
+  if (index < 0) {
+    index += m_buffer_size;
   }
-  if (m_read_reference > m_buffer_size) {
-    m_read_reference -= m_buffer_size;
-  }
-  }
-
-    while (m_read < 0 || m_read > m_buffer_size){
-  if (m_read < 0) {
-    m_read += m_buffer_size;
-  }
-  if (m_read > m_buffer_size) {
-    m_read -= m_buffer_size;
+  if (index > m_buffer_size) {
+    index -= m_buffer_size;
   }
   }
 }
@@ -160,7 +153,8 @@ std::array<float, 2> StereoRingBuffer::readSample() {
 }
 
 float StereoRingBuffer::interpolate(int index){
-  checkForReadIndexOverFlow();
+  checkForIndexOverflow(m_read_reference);
+  checkForIndexOverflow(m_read);
   fractionalizeReadIndex();
   switch (interpolation_mode) {
     case none:
@@ -179,20 +173,18 @@ float StereoRingBuffer::interpolate(int index){
 /// to keep up with change of size goal
 void StereoRingBuffer::updateStepSize() {
   float step_size_goal = 1.0;
+  
   m_actual_size = getActualSize();
-  // big sample limit to account for inertia
   if ((m_actual_size > m_size_goal) && new_size) {
-    // m_step_size = 1.5;
     step_size_goal = 2.0;
-    // update the step size but with slew for clean repitch
   } else if ((m_actual_size < m_size_goal) && new_size) {
-    // m_step_size = 0.5;
     step_size_goal = 0.25;
   }
 
   m_step_size =
       noi::Outils::slewValue(step_size_goal, m_step_size,
                              0.999);  // should be modified by sample rate
+                             
   if (m_actual_size > (m_size_goal - 200) &&
       m_actual_size < (m_size_goal + 200)) {
     if (ready_to_lock) m_step_size = 1.0;
@@ -204,7 +196,6 @@ void StereoRingBuffer::updateStepSize() {
 /// @brief increment pointer and set its int, incremented int and frac value
 void StereoRingBuffer::incrementReadPointerReference() {
   m_read_reference += m_step_size;
-  checkForReadIndexOverFlow();
 }
 void StereoRingBuffer::fractionalizeReadIndex() {
   // get sample
@@ -224,13 +215,9 @@ float StereoRingBuffer::noInterpolation(int index) { return m_buffers[index][m_i
 /// @brief Interpolation lineaire du buffer a un index flottant donne
 float StereoRingBuffer::linearInterpolation(int index) {
   // S[n]=frac * Buf[i+1]+(1-frac)*Buf[i]
-
   return (m_frac * m_buffers[index][m_i_read_next]) + ((1 - m_frac) * m_buffers[index][m_i_read]);
-
-
 }
 
-      // m_output_sample = m_buffer[(int)m_read_reference];
 
 
 /// @brief Interpolation passe-tout, recursion
@@ -264,15 +251,15 @@ void StereoRingBuffer::writeSample(std::array<float, 2> input_samples) {
 }
 
 void StereoRingBuffer::crossfade() {
-  for (int buffer_channel = 0; buffer_channel < 2; buffer_channel++){
+  for (int channel = 0; channel < 2; channel++){
     for (int i = CROSSFADE_SIZE - 1; i >= 0; i--) {
       int buffer_index = (m_write + i + 1) % m_buffer_size;
       float coef = (float)i / (float)(CROSSFADE_SIZE - 1);
 
       // std::cout<< m_crossfade_buffer[i]<<'-' << m_buffer[buffer_index]<< '-'
       // <<coef;
-      m_buffers[buffer_channel][buffer_index] = noi::Outils::linearCrossfade(
-          m_crossfade_buffer[i], m_buffers[buffer_channel][buffer_index], coef);
+      m_buffers[channel][buffer_index] = noi::Outils::linearCrossfade(
+          m_crossfade_buffer[i], m_buffers[channel][buffer_index], coef);
       // std::cout << '\n';
     }}
 }

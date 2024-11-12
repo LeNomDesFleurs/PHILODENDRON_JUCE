@@ -117,7 +117,7 @@ class Philodendron {
 
   float prev_offset{};
 
-  noi::FirstOrderFilter hpf;
+  std::vector<noi::FirstOrderFilter> hpf;
   noi::Philodendron::Parameters m_parameters;
   noi::Philodendron::Parameters m_old_parameters;
   std::array<float, 2> m_outputs{0, 0};
