@@ -19,6 +19,7 @@ Philodendron::Philodendron(noi::Philodendron::Parameters parameters, int sample_
   , m_old_parameters {parameters}
   , m_parameters {parameters}
   , exchange_buffer {_exchange_buffer}
+  , hpf {FirstOrderFilter(50.f, 44100.f)}
 {
   updateParameters(parameters);
   // m_allpasses[0].setGain(0.9);
@@ -27,7 +28,8 @@ Philodendron::Philodendron(noi::Philodendron::Parameters parameters, int sample_
 
 void Philodendron::reset(noi::Philodendron::Parameters parameters, int sample_rate){
   m_ring_buffer.reset(8.f, 2.f, sample_rate);
-updateParameters(parameters);
+  hpf.setSampleRate(sample_rate);
+  updateParameters(parameters);
 }
 
 void Philodendron::updateParameters(noi::Philodendron::Parameters parameters) {
@@ -140,7 +142,7 @@ std::array<float, 2> Philodendron::processStereo(std::array<float, 2> inputs) {
       if (m_outputs[i] > 1.f || m_outputs[i] < -1.f) {
         m_outputs[i] = 0;
       }
-      feedback[i] = inputs[i] + m_outputs[i] * m_parameters.feedback;
+      feedback[i] = inputs[i] + hpf.processhpf(m_outputs[i]) * m_parameters.feedback;
     }
     if (!m_parameters.freeze){
 

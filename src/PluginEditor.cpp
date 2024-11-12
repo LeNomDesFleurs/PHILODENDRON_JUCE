@@ -26,7 +26,7 @@ PhilodendronEditor::PhilodendronEditor(
 
   variationAttachment.reset(new Attachment(vts, "read_speed", readSpeedSlider));
   feedbackAttachment.reset(new Attachment(vts, "feedback", feedbackSlider));
-  combSizeAttachement.reset(new Attachment(vts, "comb_time", bufferSizeSlider));
+  combSizeAttachement.reset(new Attachment(vts, "buffer_size", bufferSizeSlider));
   dryWetAttachement.reset(new Attachment(vts, "dry_wet", dryWetSlider));
   nbHeadAttachement.reset(new Attachment(vts, "nb_head", nbHeadSlider));
   readOffsetAttachement.reset(
