@@ -35,7 +35,9 @@ PhilodendronEditor::PhilodendronEditor(
       new Attachment(vts, "head_ratio", headRatioSlider));
 
   // Background BEFORE widgets
-
+  backgroundComponent.positions = &positions;
+  addAndMakeVisible(backgroundComponent);
+  backgroundComponent.setBufferedToImage(true);
   for (auto* comp : getComps()) {
     addAndMakeVisible(comp);
     comp->setLookAndFeel(&emptyKnobLookAndFeel);
@@ -46,10 +48,10 @@ PhilodendronEditor::PhilodendronEditor(
   }
 
 
-  const auto& params = audioProcessor.getParameters();
-  for (auto param : params) {
-    param->addListener(this);
-  }
+  // const auto& params = audioProcessor.getParameters();
+  // for (auto param : params) {
+  //   param->addListener(this);
+  // }
 
   startTimerHz(60);
 
@@ -62,23 +64,21 @@ PhilodendronEditor::PhilodendronEditor(
 PhilodendronEditor::~PhilodendronEditor() {}
 
 std::vector<juce::Slider*> PhilodendronEditor::getComps() {
-  return {&bufferSizeSlider, &readOffsetSlider, &headRatioSlider,
-          &readSpeedSlider,  &nbHeadSlider,     &feedbackSlider,
+  return {
+          &readOffsetSlider, 
+          &bufferSizeSlider, 
+          &readSpeedSlider,  
+          &feedbackSlider,
+          &headRatioSlider,
+          &nbHeadSlider,     
           &dryWetSlider};
 }
 
-void PhilodendronEditor::parameterValueChanged(int parameterIndex,
-                                               float newValue) {}
+// void PhilodendronEditor::parameterValueChanged(int parameterIndex,
+//                                                float newValue) {}
 
 //==============================================================================
-void PhilodendronEditor::paint(juce::Graphics& g) {
-  // (Our component is opaque, so we must completely fill the background with a
-  // solid colour)
-  g.fillAll(juce::Colours::white);
-  g.setColour(juce::Colours::black);
-
-  // svgimg->drawWithin(g, getLocalBounds().toFloat(),
-  //                    juce::Justification::centred, 1);
+void PhilodendronEditor::paintOverChildren(juce::Graphics& g) {
   updateFromExchangeBuffer();
   paintDryWetWidget(g);
   paintFeedbackWidget(g);
@@ -86,40 +86,10 @@ void PhilodendronEditor::paint(juce::Graphics& g) {
   paintReadOffset(g);
   paintHeadRatio(g);
   paintNumberOfHeads(g);
-
-  // g.setColour(CustomColors::pink);
-  g.setFont(juce::Font("Times New Roman", 30.0f, juce::Font::italic));
-  // juce::AffineTransform t;
-  // t = t.rotated
-
-  // Draw Logo
-  const auto svg = Drawable::createFromImageData(BinaryData::NOI_svg,
-                                                 BinaryData::NOI_svgSize);
-
-  // juce::AffineTransform scale = Set::scale(0.2);
-  juce::Rectangle<float> position = {positions.center - 10, (positions.center *2) -30, 20.f, 20.f};
-  juce::RectanglePlacement placement = (36);
-  svg->setTransformToFit(position, placement);
-  svg->draw(g, 1.0);
-  std::vector<std::string> title = {"P","h" ,"i", "l", "o", "d", "e", "n", "d", "r", "o", "n"};
-
-    float angle = 1.f/((float)title.size() + 2);
-    angle *= (M_PI * 2);
-
-    float global_offset = (((float)title.size() / -2.f)-0.5)*angle;
-    g.addTransform(juce::AffineTransform().rotated(global_offset, positions.center, positions.center));
-
-  for (int i = 0; i < title.size(); i++){
-
-    g.addTransform(juce::AffineTransform().rotated(angle, positions.center, positions.center));
-  g.drawFittedText(title[i], positions.center - positions.slider_thickness /2.f, 0, positions.slider_thickness, positions.slider_thickness,
-                   juce::Justification::centred, 1);
-  }
-
-  // g.setFont(30.0f);
 }
 
 void PhilodendronEditor::resized() {
+  backgroundComponent.setBounds(getBounds());
   readSpeedSlider.setBounds(positions.read_speed.toNearestInt());
   bufferSizeSlider.setBounds(positions.buffer_size.toNearestInt());
   headRatioSlider.setBounds(positions.head_ratio.toNearestInt());
@@ -140,15 +110,13 @@ void PhilodendronEditor::updateFromExchangeBuffer() {
 }
 
 void PhilodendronEditor::timerCallback() {
-  // repaint_ui = true;
-
   repaint();
 }
 
 void PhilodendronEditor::paintDryWetWidget(juce::Graphics& g) {
   juce::Path p;
 
-  float radius = this->positions.dry_wet.getHeight() / 2.f - positions.slider_thickness/2.f;
+  float radius = this->positions.dry_wet.getHeight() / 2.f - positions.slider_thickness/2.f +10;
   float center = positions.center;
 
   p.addCentredArc(center, center, radius, radius, 0.f,
@@ -159,25 +127,30 @@ void PhilodendronEditor::paintDryWetWidget(juce::Graphics& g) {
 }
 
 void PhilodendronEditor::paintNumberOfHeads(juce::Graphics& g){
-  juce::Path p;
 
-  float radius = this->positions.head_number.getHeight() / 2.f - this->positions.slider_thickness/2.f;
+  float radius = this->positions.head_number.getHeight() / 2.f - this->positions.slider_thickness/2.f + 10;
   float center = positions.center;
 
-  float start_angle = 0.01;
+  float start_angle = -0.01;
   float end_angle = 0;
   float padding = 0.01;
-  float increment = 1.f / (float)parameters.head_number;
-  for (int i = 0; i < (int)parameters.head_number; i++){
-    end_angle += increment - padding;
+  // float increment = 1.f / (float)parameters.head_number;
+  float increment = 1.f / 4.f;
+  for (int i = 0; i < 4.f; i++){
+    juce::Path p;
+    if (i>=parameters.head_number){
+      g.setColour(juce::Colours::lightgrey);
+    }
+    end_angle -= increment - padding;
     p.addCentredArc(center, center, radius, radius, 0.f,
                   M_PI * start_angle * 2,
                   M_PI * end_angle * 2, true);
-    end_angle += padding;
-    start_angle+=increment ;
+    end_angle -= padding;
+    start_angle-=increment ;
+  g.strokePath(p, stroke);
+  g.setColour(juce::Colours::black);
   }
 
-  g.strokePath(p, stroke);
    }
 
 
@@ -211,13 +184,14 @@ void PhilodendronEditor::paintReadSpeed(juce::Graphics& g) {
 
   // the arrow disapear when the circle become complete
   float distance_complete_circle = pow(1.0 - offset_time, 0.3);
-  float arrow_width = 10.f;   // distance_complete_circle * 6.0;
-  float arrow_height = 10.f;  // distance_complete_circle * 10.0;
+  float arrow_width = 3.f;   // distance_complete_circle * 6.0;
+  float arrow_height = 3.f;  // distance_complete_circle * 10.0;
 
   arrow_stroke.PathStrokeType::createStrokeWithArrowheads(p, p, 0.0, 0.0, arrow_width,
                                                     arrow_height);
 
   g.strokePath(p, stroke);
+
 }
 
 void PhilodendronEditor::paintReadOffset(juce::Graphics& g) {
@@ -226,30 +200,33 @@ void PhilodendronEditor::paintReadOffset(juce::Graphics& g) {
 
   float hypotenuse = (positions.read_offset.getHeight() / 2.f);
   float theta1 =
-      2 * M_PI * parameters.read_ref + 2*M_PI*parameters.read_offset;
+      2 * M_PI * (parameters.read_ref + parameters.read_offset);
   float theta2 =
-      2 * M_PI * parameters.write + 2*M_PI*parameters.read_offset;
+      2 * M_PI * (parameters.write + parameters.read_offset);
 
-  juce::Line<float> read_line =
+  // juce::Line<float> read_line =
       buildRadiusSegment(positions.center, positions.center, -theta1,
-                         hypotenuse, positions.slider_thickness);
-  juce::Line<float> write_head =
+                         hypotenuse, positions.slider_thickness, read_path);
+  // juce::Line<float> write_head =
       buildRadiusSegment(positions.center, positions.center, -theta2,
-                         hypotenuse, positions.slider_thickness);
+                         hypotenuse, positions.slider_thickness, write_path);
 
-  read_path.addLineSegment(read_line, 1);
-  float arrow_height = 10;
-  float arrow_width = 20;
+  // read_path.addLineSegment(read_line, 1);
+  float arrow_height = 3;
+  float arrow_width = 3;
 
   arrow_stroke.PathStrokeType::createStrokeWithArrowheads(read_path, read_path, arrow_width, arrow_height, arrow_width,
                                                     arrow_height);
-  write_path.addLineSegment(write_head, 1);
+  // write_path.addLineSegment(write_head, 1);
    arrow_stroke.PathStrokeType::createStrokeWithArrowheads(write_path, write_path, arrow_width,arrow_height, arrow_width, arrow_height);
 
   float centerx = this->positions.center;
   float centery = this->positions.center;
   float radius = positions.buffer_size.getWidth() / 2.f -
                  (positions.slider_thickness / 2.f);
+  
+  //size widget is not impacted by read head slew
+  theta1 = theta2 - ( 2 * M_PI * parameters.size_goal);
 
   if (theta2 < theta1) {
     theta2 += 2 * M_PI;
@@ -259,46 +236,44 @@ void PhilodendronEditor::paintReadOffset(juce::Graphics& g) {
   size_path.addCentredArc(centerx, centery, radius, radius, M_PI, theta1, theta2, true);
 
 
-  juce::PathStrokeType stroke2 =
-      PathStrokeType(0.5, PathStrokeType::curved, PathStrokeType::rounded);
-  
-  juce::Path dashed_size;
-  dashed_size.addEllipse(
-      positions.buffer_size.reduced(positions.slider_thickness / 2.f));
-  float dashes[2] = {10.f, 10.f};
-  stroke2.createDashedStroke(dashed_size, dashed_size, dashes, 1);
   g.strokePath(read_path, stroke);
   g.strokePath(write_path, stroke);
   g.strokePath(size_path, stroke);
-  g.strokePath(dashed_size, stroke2);
 
   juce::Path p3;
   p3.addEllipse(
       positions.read_offset.reduced(positions.slider_thickness / 2.f));
-  g.strokePath(p3, stroke2);
+  g.strokePath(p3, thin_stroke);
 }
 
 void PhilodendronEditor::paintBufferSize(juce::Graphics& g) {}
 
 void PhilodendronEditor::paintHeadRatio(juce::Graphics& g) { 
   
-  juce::Path p;
   bool negate = parameters.head_ratio<0.f;
   float head_ratio = parameters.head_ratio /4.f;
   if (negate) head_ratio = -head_ratio;
-  for (int i= 0; i<4; i++){
+  for (int i= 3; i>=0; i--){
+  juce::Path p;
     float angle = pow( ((float)i/4.f) * head_ratio, 1.5);
     if (negate) {
       angle = -angle;
     }
-  juce::Line<float> read_head =
+  // juce::Line<float> read_head =
       buildRadiusSegment(positions.center, positions.center, angle *2.f*M_PI,
-                         positions.head_ratio.getWidth()/2.f, positions.slider_thickness);
+                         positions.head_ratio.getWidth()/2.f, positions.slider_thickness, p);
 
-  p.addLineSegment(read_head, 1);
+  // p.addLineSegment(read_head, 1);
+  g.setColour(juce::Colours::black);
+  if (i >= parameters.head_number)
+    {
+    g.setColour(juce::Colours::lightgrey);
   }
-
   g.strokePath(p, stroke);
+  }
+  g.setColour(juce::Colours::black);
+
+  // g.strokePath(p, stroke);
 
 }
 
@@ -342,8 +317,9 @@ void PhilodendronEditor::paintFeedbackWidget(juce::Graphics& g) {
   g.strokePath(p, stroke);
 }
 
-juce::Line<float> PhilodendronEditor::buildRadiusSegment(
-    float center_x, float center_y, float angle, float distance, float length) {
+// juce::Line<float>
+void PhilodendronEditor::buildRadiusSegment(
+    float center_x, float center_y, float angle, float distance, float length, juce::Path& p) {
   float start_x;
   float start_y;
   float end_x;
@@ -359,6 +335,7 @@ juce::Line<float> PhilodendronEditor::buildRadiusSegment(
 
   end_x = center_x + sin(theta1) * hypotenuse;
   end_y = center_y + cos(theta1) * hypotenuse;
-
-  return Line<float>(start_x, start_y, end_x, end_y);
+  p.startNewSubPath(start_x, start_y);
+  p.lineTo(end_x, end_y);
+  // return Line<float>(start_x, start_y, end_x, end_y);
 }

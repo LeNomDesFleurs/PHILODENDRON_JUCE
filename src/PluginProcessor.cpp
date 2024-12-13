@@ -123,6 +123,13 @@ void PhilodendronProcessor::processBlock(juce::AudioBuffer<float> &buffer,
 
   philodendron.updateParameters(getSettings());
 
+AudioPlayHead* phead = getPlayHead();
+
+if (auto playposinfo = phead->getPosition()){
+    // use *result
+
+}
+
   if (totalNumInputChannels == 2) {
     // to access the sample in the channel as an array
     auto LeftChannelSamples = buffer.getWritePointer(0);
@@ -181,7 +188,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout layout;
   layout.add(std::make_unique<FloatParam>(
       "buffer_size", "Buffer Size", FloatRange(0.0001f, 3.9f, 0.0001f, 0.3f), 1.f));
   layout.add(std::make_unique<FloatParam>(
-      "feedback", "Feedback", FloatRange(0.0f, 1.0f, 0.0001f, 2.f), 0.3f));
+      "feedback", "Feedback", FloatRange(0.0f, 1.0f, 0.00001f, 1.5f), 0.3f));
   layout.add(std::make_unique<FloatParam>(
     "read_offset", "Heads Offset", FloatRange(-1.f, 1.f, 0.00001f, 1.f), 0.f));
   layout.add(std::make_unique<FloatParam>(

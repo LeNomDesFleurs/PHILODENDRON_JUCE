@@ -33,17 +33,17 @@ juce::Rectangle<float> dry_wet;
  
 std::vector<juce::Rectangle<float>*> positions;
 
-Positions() : diameter{400} , center{diameter/2.f}{ 
+Positions() : diameter{600} , center{diameter/2.f}{ 
   
   // first component will be the outer component, growing inward
   positions.insert(positions.end(), {
     &title,
-    &buffer_size,
     &read_offset, 
-    &head_ratio,
+    &buffer_size,
     &read_speed,
-    &head_number,
     &feedback,
+    &head_ratio,
+    &head_number,
     &dry_wet
   });
 
@@ -70,6 +70,74 @@ class circleSlider : public juce::Slider {
     bool is_hit = (x - h) * (x - h) + (y - k) * (y - k) <= (h * h);
     return is_hit;
   }
+};
+
+class BackgroundComponent : public juce::Component {
+  void paint(juce::Graphics& g){
+  g.fillAll(juce::Colours::white);
+  g.setColour(juce::Colours::black);
+    
+  g.setFont(juce::Font("Times New Roman", 50.0f, juce::Font::italic));
+
+  // Draw Logo
+  const auto svg = Drawable::createFromImageData(BinaryData::NOI_svg,
+                                                 BinaryData::NOI_svgSize);
+
+  float logo_size = 30.f;
+  juce::Rectangle<float> position = {positions->center - logo_size/2.f, (positions->center *2) -logo_size - 10.f, logo_size, logo_size};
+  juce::RectanglePlacement placement = (36);
+  svg->setTransformToFit(position, placement);
+  svg->draw(g, 1.0);
+  std::vector<std::string> title = {"P","h" ,"i", "l", "o", "d", "e", "n", "d", "r", "o", "n"};
+
+    float angle = 1.f/((float)title.size() + 2);
+    angle *= (M_PI * 2);
+
+    float global_offset = (((float)title.size() / -2.f)-0.5)*angle;
+    g.addTransform(juce::AffineTransform().rotated(global_offset, positions->center, positions->center));
+
+  for (int i = 0; i < title.size(); i++){
+
+    g.addTransform(juce::AffineTransform().rotated(angle, positions->center, positions->center));
+  g.drawFittedText(title[i], positions->center - positions->slider_thickness /2.f, 0, positions->slider_thickness, positions->slider_thickness,
+                   juce::Justification::centred, 1);
+  }
+
+  //DRYWET background
+  juce::Path circle;
+  circle.addEllipse(
+      positions->dry_wet.reduced(positions->slider_thickness / 2.f).expanded(10, 10));
+  g.strokePath(circle, thin_stroke);
+
+
+  //READ_SPEED BACKGROUND
+  juce::Path read_speed_circle;
+  read_speed_circle.addEllipse(
+      positions->read_speed.reduced(positions->slider_thickness / 2.f));
+  float dashes[4] = {1.f, 20.f};
+  thin_stroke.createDashedStroke(read_speed_circle, read_speed_circle, dashes, 2);
+  g.strokePath(read_speed_circle, thin_stroke);
+
+  //BUFFER_SIZE BACKGROUND
+  juce::Path buffer_size_circle;
+  buffer_size_circle.addEllipse(
+      positions->buffer_size.reduced(positions->slider_thickness / 2.f));
+  float dashes_buffer_size[2] = {10.f, 10.f};
+  thin_stroke.createDashedStroke(buffer_size_circle, buffer_size_circle, dashes_buffer_size, 1);
+  g.strokePath(buffer_size_circle, thin_stroke);
+
+juce::Path feedback_circle;
+  feedback_circle.addEllipse(
+      positions->feedback.reduced(positions->slider_thickness / 2.f));
+  float dashes_feedback[4] = {7.f, 10.f, 1.f, 10.f};
+  thin_stroke.createDashedStroke(feedback_circle, feedback_circle, dashes_feedback, 4);
+  g.strokePath(feedback_circle, thin_stroke);
+
+  
+  }
+  public:
+  Positions* positions;
+  juce::PathStrokeType thin_stroke {PathStrokeType(0.5, PathStrokeType::curved, PathStrokeType::rounded)};
 };
 
 class EmptyKnob : public juce::LookAndFeel_V4 {
@@ -101,20 +169,21 @@ class PlaceHolder : public juce::LookAndFeel_V4 {
 
 class PhilodendronEditor : 
 public juce::AudioProcessorEditor,
-public juce::AudioProcessorParameter::Listener,
+// public juce::AudioProcessorParameter::Listener,
 public juce::Timer{
  public:
   PhilodendronEditor(PhilodendronProcessor &p, juce::AudioProcessorValueTreeState& vts, std::shared_ptr<noi::ExchangeBuffer>& _exchange_buffer);
   ~PhilodendronEditor() override;
 
-  void parameterValueChanged(int parameterIndex, float newValue) override;
-  void parameterGestureChanged(int parameterIndex,
-                               bool gestureIsStarting) override {}
+  // void parameterValueChanged(int parameterIndex, float newValue) override;
+  // void parameterGestureChanged(int parameterIndex,
+  //                              bool gestureIsStarting) override {}
   //==============================================================================
-  void paint(juce::Graphics &) override;
+  // void paint(juce::Graphics &) override;
   void updateFromExchangeBuffer();
   void timerCallback() override;
   void resized() override;
+  void paintOverChildren(juce::Graphics& g) override;
   std::vector<juce::Slider *> getComps();
 
   EmptyKnob emptyKnobLookAndFeel;
@@ -131,9 +200,11 @@ public juce::Timer{
   void paintNumberOfHeads(juce::Graphics& g);
   void paintBufferSize(juce::Graphics& g);
 
-  juce::Line<float> buildRadiusSegment(float center_x, float center_y,
+
+  // juce::Line<float> 
+  void buildRadiusSegment(float center_x, float center_y,
                                        float angle, float distance,
-                                       float length);
+                                       float length, juce::Path& p);
 
   circleSlider readSpeedSlider;
   circleSlider feedbackSlider;
@@ -142,6 +213,7 @@ public juce::Timer{
   circleSlider nbHeadSlider;
   circleSlider headRatioSlider;
   circleSlider readOffsetSlider;
+  BackgroundComponent backgroundComponent;
 
   using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
   std::unique_ptr<Attachment> variationAttachment;
@@ -155,7 +227,8 @@ public juce::Timer{
   std::shared_ptr<noi::ExchangeBuffer> exchange_buffer;
   noi::ExchangeBuffer::Content parameters;
   juce::PathStrokeType stroke {PathStrokeType(2.0, PathStrokeType::curved, PathStrokeType::rounded)};
-  juce::PathStrokeType arrow_stroke {PathStrokeType(0.25, PathStrokeType::curved, PathStrokeType::rounded)};
+  juce::PathStrokeType arrow_stroke {PathStrokeType(0.001, PathStrokeType::curved, PathStrokeType::rounded)};
+  juce::PathStrokeType thin_stroke {PathStrokeType(0.5, PathStrokeType::curved, PathStrokeType::rounded)};
   // This reference is provided as a quick way for your editor to
   // access the processor object that created it.
   PhilodendronProcessor &audioProcessor;

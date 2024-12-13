@@ -24,6 +24,7 @@ class ExchangeBuffer{
   float feedback;
   float dry_wet;
   float read_ref;
+  float size_goal;
   float write;
   float head_position;
   float read_speed;

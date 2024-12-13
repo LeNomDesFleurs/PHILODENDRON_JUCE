@@ -19,7 +19,7 @@ Philodendron::Philodendron(noi::Philodendron::Parameters parameters, int sample_
   , m_old_parameters {parameters}
   , m_parameters {parameters}
   , exchange_buffer {_exchange_buffer}
-  , hpf {FirstOrderFilter(50.f, 44100.f), FirstOrderFilter(50.f, 44100.f)}
+  , hpf {FirstOrderFilter(20.f, 44100.f), FirstOrderFilter(50.f, 44100.f)}
 {
   updateParameters(parameters);
   // m_allpasses[0].setGain(0.9);
@@ -104,6 +104,9 @@ void Philodendron::updateExchangeBuffer(){
     exchange_buffer->content.head_number = this->m_parameters.nb_head;
     exchange_buffer->content.freezed = this->m_parameters.freeze;
     exchange_buffer->content.read_offset = this->m_parameters.read_offset;
+    exchange_buffer->content.size_goal =
+        (float)this->m_ring_buffer.m_size_goal /
+        (float)m_ring_buffer.m_buffer_size;
     exchange_buffer->mutex.unlock();
   }
 }

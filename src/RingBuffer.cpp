@@ -93,7 +93,7 @@ float StereoRingBuffer::getActualSize() {
 
 /// @brief increment read pointer and return sample from interpolation
 std::array<float, 2> StereoRingBuffer::readSample() {
-  if (m_buffer_mode == reverse) {
+   if (m_buffer_mode == reverse) {
     m_step_size = 0. - m_step_size;
   }
 
@@ -114,37 +114,43 @@ std::array<float, 2> StereoRingBuffer::readSample() {
 
         m_read = m_read_reference + heads[i].distance;
 
-        if (m_buffer_mode == freeze) {
-          m_read += m_read_offset;
-        }
-
-        float sample = interpolate(channel);
-
-        // reverse crossfade
-        if (heads[i].distance < CROSSFADE_SIZE && heads[i].read_speed < 0.f) {
-          m_read = (float)m_write - heads[i].distance;
-          float crossfade_sample = interpolate(channel);
-          sample = noi::Outils::equalPowerCrossfade(
-              sample, crossfade_sample,
-              heads[i].distance / (float)CROSSFADE_SIZE);
-        }
-        // crossfade
-        else if ((m_actual_size - heads[i].distance) < CROSSFADE_SIZE &&
-                 heads[i].read_speed > 0.f) {
-          m_read =
-              m_read_reference + ((float)m_actual_size - heads[i].distance);
-          float crossfade_sample = interpolate(channel);
-          sample = noi::Outils::equalPowerCrossfade(
-              sample, crossfade_sample,
-              (m_actual_size - heads[i].distance) / (float)CROSSFADE_SIZE);
-        }
-
         // if (m_buffer_mode == freeze) {
-        //   m_output_sample *=
-        //       noi::Outils::clipValue(1.f / pow(m_step_size, 0.5), 0.2, 3.);
+          m_read += m_read_offset;
+          
         // }
+          float read_speed_amplitude_correction = 1.f - (log(abs(heads[i].read_speed)+0.01f) / 2.f);
+          if (read_speed_amplitude_correction > 2.f) {
+            read_speed_amplitude_correction = 2.f;
+          }
+          float sample = interpolate(channel) * read_speed_amplitude_correction;
+          // sample /= 1.5;
+          // // reverse crossfade
+          // if (heads[i].distance < CROSSFADE_SIZE && heads[i].read_speed <
+          // 0.f) {
+          //   m_read = (float)m_write - heads[i].distance;
+          //   float crossfade_sample = interpolate(channel);
+          //   sample = noi::Outils::equalPowerCrossfade(
+          //       sample, crossfade_sample,
+          //       heads[i].distance / (float)CROSSFADE_SIZE);
+          // }
+          // crossfade
+          // if ((m_actual_size - heads[i].distance) < CROSSFADE_SIZE &&
+          //          heads[i].read_speed > 0.f) {
+          //   m_read -= actual size heads[i].distance
+          //       m_read_reference + ((float)m_actual_size -
+          //       );
+          //   float crossfade_sample = interpolate(channel);
+          //   sample = noi::Outils::equalPowerCrossfade(
+          //       sample, crossfade_sample,
+          //       (m_actual_size - heads[i].distance) / (float)CROSSFADE_SIZE);
+          // }
 
-        m_output_samples[channel] += sample;
+          // if (m_buffer_mode == freeze) {
+          //   m_output_sample *=
+          //       noi::Outils::clipValue(1.f / pow(m_step_size, 0.5), 0.2, 3.);
+          // }
+
+          m_output_samples[channel] += sample;
       }
   m_output_samples[channel] /= (float)active_heads;
 }
