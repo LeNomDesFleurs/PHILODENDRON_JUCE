@@ -16,7 +16,35 @@
 //==============================================================================
 /**
  */
+using juce::Slider;
 
+// class Encoder: public Slider::Pimpl, public juce::Component{
+//  void handleAbsoluteDrag(const MouseEvent& e) override {
+//     auto mousePos = (isHorizontal() || style == RotaryHorizontalDrag) ? e.position.x : e.position.y;
+//         double newPos = 0;
+
+//             auto mouseDiff = (style == RotaryHorizontalDrag
+//                                 || style == LinearHorizontal
+//                                 || style == LinearBar
+//                                 || (style == IncDecButtons && incDecDragDirectionIsHorizontal()))
+//                               ? e.position.x - mouseDragStartPos.x
+//                               : mouseDragStartPos.y - e.position.y;
+
+//             newPos = owner.valueToProportionOfLength (valueOnMouseDown)
+//                        + mouseDiff * (1.0 / pixelsForFullDragExtent);
+
+//             if (style == IncDecButtons)
+//             {
+//                 incButton->setState (mouseDiff < 0 ? Button::buttonNormal : Button::buttonDown);
+//                 decButton->setState (mouseDiff > 0 ? Button::buttonNormal : Button::buttonDown);
+//             }
+        
+
+//         newPos = (isRotary() && ! rotaryParams.stopAtEnd) ? newPos - std::floor (newPos)
+//                                                           : jlimit (0.0, 1.0, newPos);
+//         valueWhenLastDragged = owner.proportionOfLengthToValue (newPos);
+//   }
+// };
 class Positions {
 public:
 int diameter;

@@ -51,36 +51,6 @@ void Philodendron::updateParameters(noi::Philodendron::Parameters parameters) {
     m_old_parameters = m_parameters;
 }
 
-// bool Philodendron::variationHaventChange() {
-//   return m_parameters.read_speed == m_old_parameters.read_speed;
-// }
-
-// bool Philodendron::timeHaventChange() {
-//   return m_parameters.feedback == m_old_parameters.feedback;
-// }
-
-// bool Philodendron::combSizeHaventChange() {
-//   return m_parameters.comb_time == m_old_parameters.comb_time;
-// }
-
-// bool Philodendron::freezeHaventChange() {
-//   return m_parameters.freeze == m_old_parameters.freeze;
-// }
-
-
-// more variation -> more diffrence of gain between combs
-// void Philodendron::setTime() {
-//   if (timeHaventChange()) return;
-//   float feedback = m_parameters.feedback;
-//   for (int i = 0; i < 2; i++) {
-//     // m_allpasses[i].setGain(feedback);
-//     for (int j = 0; j < 6; j++) {
-//       m_combs[i][j].overrideFeedback(feedback);
-//       ;
-//     }
-//   }
-// }
-
 void Philodendron::setFreeze() {
   for (int i = 0; i < 2; i++) {
       m_ring_buffer.setFreezed(m_parameters.freeze);
@@ -111,7 +81,6 @@ void Philodendron::updateExchangeBuffer(){
   }
 }
 
-// more variation -> more diffrence of gain between combs
 void Philodendron::resize() {
   for (int i = 0; i < 2; i++) {
     float time = m_parameters.comb_time;
@@ -121,7 +90,6 @@ void Philodendron::resize() {
 
 void Philodendron::setSampleRate(float sample_rate) {
   for (int i = 0; i < 2; i++) {
-    // process combs
     m_ring_buffer.setSampleRate(sample_rate);
   }
 }
@@ -137,9 +105,7 @@ std::array<float, 2> Philodendron::processStereo(std::array<float, 2> inputs) {
 
     m_outputs = m_ring_buffer.readSample();
 
-    m_outputs = 
-    // ((2 * m_parameters.dry_wet) + 1) *
-                 noi::Outils::equalPowerCrossfade(inputs, m_outputs,
+    m_outputs = noi::Outils::equalPowerCrossfade(inputs, m_outputs,
                                                   m_parameters.dry_wet);
     std::array<float, 2> feedback;
     for (int i = 0; i < 2; i++) {
@@ -153,8 +119,7 @@ std::array<float, 2> Philodendron::processStereo(std::array<float, 2> inputs) {
   
     }
     if (!m_parameters.freeze){
-
-    m_ring_buffer.writeSample(feedback);
+      m_ring_buffer.writeSample(feedback);
     }
   return m_outputs;
 }

@@ -184,7 +184,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout layout;
   layout.add(std::make_unique<FloatParam>(
       "dry_wet", "Dry-Wet", FloatRange(0.f, 1.f, 0.01f, 1.f), 1.f));
   layout.add(std::make_unique<FloatParam>(
-      "read_speed", "Read Speed", FloatRange(-4.f, 4.f, 0.000001f, 0.25f, true), 0.0f));
+      "read_speed", "Read Speed", FloatRange(-4.f, 4.f, 0.000001f, 0.25f, true), 1.0f));
   layout.add(std::make_unique<FloatParam>(
       "buffer_size", "Buffer Size", FloatRange(0.0001f, 3.9f, 0.0001f, 0.3f), 1.f));
   layout.add(std::make_unique<FloatParam>(

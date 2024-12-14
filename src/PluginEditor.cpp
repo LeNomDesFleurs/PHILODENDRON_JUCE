@@ -47,7 +47,6 @@ PhilodendronEditor::PhilodendronEditor(
                           comp->getTextBoxHeight());
   }
 
-
   // const auto& params = audioProcessor.getParameters();
   // for (auto param : params) {
   //   param->addListener(this);
