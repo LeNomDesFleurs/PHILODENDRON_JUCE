@@ -12,7 +12,7 @@
 
 #include "PluginProcessor.h"
 #include "Philodendron.h"
-
+using namespace juce;
 //==============================================================================
 /**
  */
@@ -61,7 +61,7 @@ juce::Rectangle<float> dry_wet;
  
 std::vector<juce::Rectangle<float>*> positions;
 
-Positions() : diameter{600} , center{diameter/2.f}{ 
+Positions(int diameter){
   
   // first component will be the outer component, growing inward
   positions.insert(positions.end(), {
@@ -74,17 +74,22 @@ Positions() : diameter{600} , center{diameter/2.f}{
     &head_number,
     &dry_wet
   });
-
-  slider_thickness = (diameter / 2) / positions.size();
-  float current_radius = diameter / 2;
-
-  for (auto* position : positions){
-    float x = (diameter / 2) - current_radius;
-    float width = current_radius * 2;
-    *position = juce::Rectangle<float>(x, x, width, width);
-    current_radius -= slider_thickness;
-  }
+    setDiameter(diameter);
  }
+    void setDiameter(int _diameter){
+        diameter = _diameter;
+        center = diameter/2.f;
+        slider_thickness = (diameter / 2) / positions.size();
+        float current_radius = diameter / 2;
+
+        for (auto* position : positions){
+          float x = (diameter / 2) - current_radius;
+          float width = current_radius * 2;
+          *position = juce::Rectangle<float>(x, x, width, width);
+          current_radius -= slider_thickness;
+        }
+    }
+    
 };
 
 class circleSlider : public juce::Slider {
@@ -105,7 +110,7 @@ class BackgroundComponent : public juce::Component {
   g.fillAll(juce::Colours::white);
   g.setColour(juce::Colours::black);
     
-  g.setFont(juce::Font("Times New Roman", 50.0f, juce::Font::italic));
+      g.setFont(juce::FontOptions("Times New Roman", 50.0f, juce::Font::italic));
 
   // Draw Logo
   const auto svg = Drawable::createFromImageData(BinaryData::NOI_svg,
@@ -234,6 +239,8 @@ public juce::Timer{
                                        float angle, float distance,
                                        float length, juce::Path& p);
 
+ComponentBoundsConstrainer newConstrainer;
+    
   circleSlider readSpeedSlider;
   circleSlider feedbackSlider;
   circleSlider bufferSizeSlider;

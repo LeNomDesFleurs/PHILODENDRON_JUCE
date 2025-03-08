@@ -9,17 +9,17 @@
 */
 
 #include "Philodendron.h"
-static const float MAX_COMB_SIZE = 4.f;
+static const float MAX_BUFFER_SIZE = 8.f;
 
 namespace noi {
 using noi::StereoRingBuffer;
 
 Philodendron::Philodendron(noi::Philodendron::Parameters parameters, int sample_rate, std::shared_ptr<noi::ExchangeBuffer>& _exchange_buffer)
-  : m_ring_buffer { StereoRingBuffer(8.f, 2.f, sample_rate) }
-  , m_old_parameters {parameters}
-  , m_parameters {parameters}
-  , exchange_buffer {_exchange_buffer}
-  , hpf {FirstOrderFilter(20.f, 44100.f), FirstOrderFilter(50.f, 44100.f)}
+: m_ring_buffer { StereoRingBuffer(MAX_BUFFER_SIZE, 2.f, sample_rate) }
+, exchange_buffer {_exchange_buffer}
+, hpf {FirstOrderFilter(20.f, 44100.f), FirstOrderFilter(50.f, 44100.f)}
+, m_parameters {parameters}
+, m_old_parameters {parameters}
 {
   updateParameters(parameters);
   // m_allpasses[0].setGain(0.9);

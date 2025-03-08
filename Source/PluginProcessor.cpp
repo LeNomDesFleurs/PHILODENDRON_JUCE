@@ -119,7 +119,7 @@ void PhilodendronProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                             juce::MidiBuffer &midiMessages) {
   juce::ScopedNoDenormals noDenormals;
   auto totalNumInputChannels = getTotalNumInputChannels();
-  auto totalNumOutputChannels = getTotalNumOutputChannels();
+//  auto totalNumOutputChannels = getTotalNumOutputChannels();
 
   philodendron.updateParameters(getSettings());
 

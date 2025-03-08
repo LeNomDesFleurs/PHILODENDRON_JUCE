@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="h2QTzQ" name="Philodendron" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="1" jucerFormatVersion="1" pluginFormats="buildAAX,buildAU,buildAUv3,buildStandalone,buildVST3"
+              companyWebsite="lndf.fr" companyName="Noi" version="1.0.2" pluginManufacturerCode="Noia"
+              pluginCode="Phil" pluginAAXCategory="8192">
+  <MAINGROUP id="BBI0qQ" name="Philodendron">
+    <GROUP id="{F21F6085-9ED9-5737-4E0E-7A7358BFB349}" name="Source">
+      <FILE id="q1Ru87" name="EditableComponent.h" compile="0" resource="0"
+            file="Source/EditableComponent.h"/>
+      <FILE id="DywxCj" name="NOI.svg" compile="0" resource="1" file="Source/NOI.svg"/>
+      <FILE id="AvwyKD" name="Outils.cpp" compile="1" resource="0" file="Source/Outils.cpp"/>
+      <FILE id="sfxsof" name="Outils.hpp" compile="0" resource="0" file="Source/Outils.hpp"/>
+      <FILE id="qRSUpA" name="Philodendron.cpp" compile="1" resource="0"
+            file="Source/Philodendron.cpp"/>
+      <FILE id="a2SH5P" name="Philodendron.h" compile="0" resource="0" file="Source/Philodendron.h"/>
+      <FILE id="TdpzDg" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="H1yBKk" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="rEWXpW" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="id9lDz" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="fdckd5" name="RingBuffer.cpp" compile="1" resource="0" file="Source/RingBuffer.cpp"/>
+      <FILE id="fK2jnP" name="RingBuffer.hpp" compile="0" resource="0" file="Source/RingBuffer.hpp"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <EXPORTFORMATS>
+    <XCODE_IPHONE targetFolder="Builds/iOS" iosDevelopmentTeamID="53B2GD4XYM">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Philodendron"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="Philodendron"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_IPHONE>
+    <XCODE_MAC targetFolder="Builds/MacOSX" hardenedRuntime="0" hardenedRuntimeOptions="com.apple.security.device.audio-input"
+               microphonePermissionNeeded="1" iosDevelopmentTeamID="53B2GD4XYM">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="/Users/thomas/PROJETS/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="/Users/thomas/PROJETS/JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+</JUCERPROJECT>

@@ -17,13 +17,14 @@ PhilodendronEditor::PhilodendronEditor(
     PhilodendronProcessor& p, juce::AudioProcessorValueTreeState& vts,
     std::shared_ptr<noi::ExchangeBuffer>& _exchange_buffer)
     : AudioProcessorEditor(&p),
-      audioProcessor(p),
-      exchange_buffer{_exchange_buffer} {
+    positions{600},
+exchange_buffer{_exchange_buffer},
+    audioProcessor(p)
+    {
   // Make sure that before the constructor has finished, you've set the
   // editor's size to whatever you need it to be.
 
   using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
-
   variationAttachment.reset(new Attachment(vts, "read_speed", readSpeedSlider));
   feedbackAttachment.reset(new Attachment(vts, "feedback", feedbackSlider));
   combSizeAttachement.reset(new Attachment(vts, "buffer_size", bufferSizeSlider));
@@ -34,6 +35,7 @@ PhilodendronEditor::PhilodendronEditor(
   headRatioAttachement.reset(
       new Attachment(vts, "head_ratio", headRatioSlider));
 
+        
   // Background BEFORE widgets
   backgroundComponent.positions = &positions;
   addAndMakeVisible(backgroundComponent);
@@ -54,6 +56,11 @@ PhilodendronEditor::PhilodendronEditor(
 
   startTimerHz(60);
 
+setResizable(true, true);
+        
+        newConstrainer.setFixedAspectRatio(1.);
+        newConstrainer.setMinimumWidth(500);
+        setConstrainer(&newConstrainer);
   setSize(positions.diameter, positions.diameter);
   // load Image from BinaryData
   // svgimg = juce::Drawable::createFromImageData(BinaryData::noi_svg,
@@ -78,6 +85,9 @@ std::vector<juce::Slider*> PhilodendronEditor::getComps() {
 
 //==============================================================================
 void PhilodendronEditor::paintOverChildren(juce::Graphics& g) {
+    int height = getBounds().getHeight();
+    int width = getBounds().getWidth();
+    positions.setDiameter(std::min(height, width));
   updateFromExchangeBuffer();
   paintDryWetWidget(g);
   paintFeedbackWidget(g);
@@ -160,7 +170,7 @@ void PhilodendronEditor::paintReadSpeed(juce::Graphics& g) {
   float radius = positions.read_speed.getWidth() / 2.f -
                  (positions.slider_thickness / 2.f);
 
-  float bottom_offset = 0.08;
+//  float bottom_offset = 0.08;
   float read_speed = this->parameters.read_speed;
   read_speed = read_speed > 0 ? read_speed / 2.f : read_speed / 4.f;
 
@@ -182,7 +192,7 @@ void PhilodendronEditor::paintReadSpeed(juce::Graphics& g) {
 
 
   // the arrow disapear when the circle become complete
-  float distance_complete_circle = pow(1.0 - offset_time, 0.3);
+//  float distance_complete_circle = pow(1.0 - offset_time, 0.3);
   float arrow_width = 3.f;   // distance_complete_circle * 6.0;
   float arrow_height = 3.f;  // distance_complete_circle * 10.0;
 

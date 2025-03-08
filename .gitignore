@@ -1,4 +1,6 @@
 build/
+Builds/
+JuceLibraryCode/
 .cache
 DS_Store
 Output
